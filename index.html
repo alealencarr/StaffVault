@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth antialiased dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevPortal | Ultimate Staff Edition</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['Fira Code', 'monospace'] },
+                    colors: {
+                        black: '#000000', base: '#0a0a0a', surface: '#111111',
+                        borderSubtle: 'rgba(255, 255, 255, 0.08)', borderStrong: 'rgba(255, 255, 255, 0.15)',
+                    },
+                    backgroundImage: {
+                        'grid-pattern': "url(\"data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h40v40H0V0zm1 1h38v38H1V1z' fill='%23ffffff' fill-opacity='0.02' fill-rule='evenodd'/%3E%3C/svg%3E\")",
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #000000; color: #ededed; }
+
+        .ambient-glow {
+            position: fixed; top: -10%; left: 50%; transform: translateX(-50%);
+            width: 80vw; height: 500px; background: radial-gradient(ellipse at top, rgba(255, 255, 255, 0.04), transparent 60%);
+            filter: blur(100px); pointer-events: none; z-index: 0;
+        }
+
+        .premium-card {
+            background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
+            border: 1px solid theme('colors.borderSubtle'); box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(12px); transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        .badge {
+            display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 9999px;
+            font-size: 0.7rem; font-family: 'Fira Code', monospace; background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1); color: #a1a1aa; cursor: pointer; transition: all 0.2s;
+        }
+        .badge:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
+        .tldr-box { border-left: 3px solid #71717a; background: rgba(255,255,255,0.02); padding: 12px 16px; border-radius: 0 8px 8px 0; margin-bottom: 16px; }
+
+        /* Accordions */
+        details { border: 1px solid theme('colors.borderSubtle'); border-radius: 8px; background: rgba(255,255,255,0.02); margin-bottom: 8px; transition: all 0.2s; }
+        details[open] { background: rgba(255,255,255,0.04); border-color: theme('colors.borderStrong'); }
+        summary { padding: 12px 16px; cursor: pointer; font-weight: 500; font-size: 0.9rem; display: flex; justify-content: space-between; align-items: center; list-style: none; }
+        summary::-webkit-details-marker { display: none; }
+        .details-content { padding: 0 16px 16px 16px; font-size: 0.85rem; color: #a1a1aa; line-height: 1.6; border-top: 1px solid rgba(255,255,255,0.05); margin-top: 8px; padding-top: 12px; }
+
+        /* Code Blocks */
+        pre { background: #0a0a0a !important; border: 1px solid theme('colors.borderSubtle'); border-radius: 0.5rem; padding: 1rem; overflow-x: auto; margin-top: 10px; margin-bottom: 10px;}
+        code { font-family: 'Fira Code', monospace; font-size: 0.85rem; color: #d4d4d8; }
+        .keyword { color: #c678dd; } .type { color: #e5c07b; } .string { color: #98c379; } .comment { color: #71717a; font-style: italic; } .function { color: #61afef; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+    </style>
+</head>
+<body class="flex flex-col h-screen overflow-hidden relative">
+
+    <div class="ambient-glow"></div>
+    <div class="absolute inset-0 bg-grid-pattern z-0 pointer-events-none"></div>
+
+    <!-- Header -->
+    <header class="sticky top-0 z-50 flex items-center justify-between px-6 py-3 border-b border-white/10 bg-black/60 backdrop-blur-xl">
+        <div class="flex items-center gap-3 w-1/4">
+            <div class="w-8 h-8 rounded bg-zinc-900 border border-white/10 flex items-center justify-center">
+                <i class="ph ph-database text-zinc-100"></i>
+            </div>
+            <h1 class="text-xl font-semibold tracking-tight text-zinc-100 hidden sm:block">
+                Staff<span class="text-zinc-500 font-normal">Vault</span>
+            </h1>
+        </div>
+        
+        <div class="relative w-full max-w-2xl mx-4 group">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                <i class="ph ph-magnifying-glass text-zinc-400"></i>
+            </div>
+            <input type="text" id="searchInput" 
+                class="block w-full pl-10 pr-12 py-2 border border-white/10 rounded-lg bg-zinc-900/50 text-zinc-200 placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 focus:bg-zinc-900 transition-all text-sm" 
+                placeholder="Search definitions, C#, Linux, AWS, 36 Q&A...">
+            <div class="absolute inset-y-0 right-0 pr-2.5 flex items-center pointer-events-none">
+                <kbd class="text-[10px] font-mono text-zinc-500 bg-white/5 border border-white/10 px-1.5 py-0.5 rounded">⌘K</kbd>
+            </div>
+        </div>
+
+        <div class="flex items-center justify-end w-1/4 gap-4">
+            <div class="hidden md:flex items-center gap-2 px-2.5 py-1 rounded-full border border-white/5 bg-white/5">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span class="text-[10px] font-medium text-zinc-300 tracking-wide">ULTIMATE EDITION</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden z-10">
+        
+        <!-- Sidebar -->
+        <aside class="w-64 border-r border-white/10 bg-black/40 backdrop-blur-md hidden md:flex flex-col overflow-y-auto">
+            <nav class="flex-1 px-4 py-6 space-y-1" id="sidebarNav">
+                
+                <button onclick="filterCategory('all')" class="nav-btn w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg bg-white/10 text-zinc-100 border border-white/10 transition-all" data-cat="all">
+                    <i class="ph ph-squares-four text-lg opacity-80"></i> All Contents
+                </button>
+
+                <div class="pt-6 pb-2"><p class="px-3 text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Architecture</p></div>
+                <button onclick="filterCategory('api')" class="nav-btn w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-zinc-400 hover:bg-white/5 transition-all" data-cat="api">
+                    <i class="ph ph-plugs text-lg opacity-70"></i> RESTful & API Design
+                </button>
+                <button onclick="filterCategory('arch')" class="nav-btn w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-zinc-400 hover:bg-white/5 transition-all" data-cat="arch">
+                    <i class="ph ph-hexagon text-lg opacity-70"></i> Arch Patterns & SOLID
+                </button>
+                <button onclick="filterCategory('ddd')" class="nav-btn w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-zinc-400 hover:bg-white/5 transition-all" data-cat="ddd">
+                    <i class="ph ph-brain text-lg opacity-70"></i> DDD & Domain Models
+                </button>
+
+                <div class="pt-6 pb-2"><p class="px-3 text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">.NET & Engineering</p></div>
+                <button onclick="filterCategory('csharp')" class="nav-btn w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-zinc-400 hover:bg-white/5 transition-all" data-cat="csharp">
+                    <i class="ph ph-code text-lg opacity-70"></i> C# Deep Dive
+                </button>
+                <button onclick="filterCategory('data')" class="nav-btn w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-zinc-400 hover:bg-white/5 transition-all" data-cat="data">
+                    <i class="ph ph-database text-lg opacity-70"></i> Databases & Persistence
+                </button>
+                <button onclick="filterCategory('tests')" class="nav-btn w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-zinc-400 hover:bg-white/5 transition-all" data-cat="tests">
+                    <i class="ph ph-flask text-lg opacity-70"></i> Testing Pyramid
+                </button>
+
+                <div class="pt-6 pb-2"><p class="px-3 text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Cloud & DevOps</p></div>
+                <button onclick="filterCategory('cloud')" class="nav-btn w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-zinc-400 hover:bg-white/5 transition-all" data-cat="cloud">
+                    <i class="ph ph-cloud-aws text-lg opacity-70"></i> Cloud, K8s & Docker
+                </button>
+                <button onclick="filterCategory('git')" class="nav-btn w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-zinc-400 hover:bg-white/5 transition-all" data-cat="git">
+                    <i class="ph ph-git-branch text-lg opacity-70"></i> Git & Versioning
+                </button>
+                <button onclick="filterCategory('linux')" class="nav-btn w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-zinc-400 hover:bg-white/5 transition-all" data-cat="linux">
+                    <i class="ph ph-terminal-window text-lg opacity-70"></i> Linux & CLI Mastery
+                </button>
+
+                <div class="pt-6 pb-2"><p class="px-3 text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Interviews & Study</p></div>
+                <button onclick="filterCategory('qa')" class="nav-btn w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-amber-400 hover:bg-white/5 transition-all border border-amber-500/20" data-cat="qa">
+                    <i class="ph ph-microphone-stage text-lg"></i> The 36 Q&A Vault
+                </button>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto p-4 sm:p-10 relative scroll-smooth" id="mainContent">
+            <div class="max-w-5xl mx-auto space-y-12 pb-24" id="cardContainer">
+
+                <!-- ========================================== -->
+                <!-- 1. API & RESTful Design                    -->
+                <!-- ========================================== -->
+                <article class="doc-card premium-card rounded-2xl p-8" data-category="api">
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <span class="badge">#rest</span> <span class="badge">#http</span> <span class="badge">#contracts</span>
+                    </div>
+                    <h2 class="text-2xl font-semibold tracking-tight text-zinc-100 mb-4">Design de APIs RESTful</h2>
+                    
+                    <div class="tldr-box">
+                        <strong class="text-zinc-200">TL;DR:</strong> Consistência é rei. Se você usa camelCase num endpoint e snake_case em outro, o Developer Experience (DX) dos seus consumidores será terrível.
+                    </div>
+
+                    <div class="space-y-4">
+                        <details>
+                            <summary>Padrões de Nomenclatura (Paths, Queries, Headers) <i class="ph ph-caret-down text-zinc-500"></i></summary>
+                            <div class="details-content">
+                                <ul class="list-disc list-inside space-y-2">
+                                    <li><strong>Paths:</strong> Sempre plural e <code class="text-zinc-300 bg-white/10 px-1 rounded">kebab-case</code>. Ex: <code class="text-emerald-400">/v1/negociacoes-cdb</code>.</li>
+                                    <li><strong>Query Params:</strong> Sempre <code class="text-zinc-300 bg-white/10 px-1 rounded">camelCase</code>. Ex: <code class="text-emerald-400">?dataInicio=2024-01-01</code>.</li>
+                                    <li><strong>Headers Customizados:</strong> Padrão <code class="text-zinc-300 bg-white/10 px-1 rounded">Hyphenated-Pascal-Case</code>, geralmente prefixado. Ex: <code class="text-emerald-400">X-Correlation-ID</code>.</li>
+                                    <li><strong>Hierarquia Máxima:</strong> 3 níveis de profundidade. Passou disso, repense. Ex Aceitável: <code class="text-emerald-400">/clientes/{id}/enderecos/{id}/telefones</code>.</li>
+                                </ul>
+                            </div>
+                        </details>
+                        <details>
+                            <summary>Tipagem, Datas e Nulos <i class="ph ph-caret-down text-zinc-500"></i></summary>
+                            <div class="details-content">
+                                <ul class="list-disc list-inside space-y-2">
+                                    <li><strong>Datas:</strong> Siga a <b>RFC 3339</b> rigorosamente. Sufixo de timezones é obrigatório. Ex: <code class="text-emerald-400">2024-05-20T14:30:00Z</code>. Prefixo <code class="text-zinc-300 bg-white/10 px-1 rounded">em/at</code> para o campo.</li>
+                                    <li><strong>Booleanos:</strong> Sempre usar verbos interrogativos <code class="text-zinc-300 bg-white/10 px-1 rounded">is/has/foi/pode</code>. Ex: `isAtivo`, `foiAprovado`.</li>
+                                    <li><strong>Coleções (Listas):</strong> <span class="text-red-400">NUNCA retorne null</span>. Se não houver dados, retorne um array vazio <code class="text-emerald-400">[]</code>.</li>
+                                    <li><strong>Enums:</strong> Sempre serialize como `string` constante no JSON de retorno. Se a ordem numérica do Enum mudar no backend, não quebra os clientes.</li>
+                                </ul>
+                            </div>
+                        </details>
+                        <details>
+                            <summary>Status Codes de Resiliência <i class="ph ph-caret-down text-zinc-500"></i></summary>
+                            <div class="details-content">
+                                <ul class="list-disc list-inside space-y-2">
+                                    <li><strong>202 Accepted:</strong> O padrão para processamento assíncrono. Retorne isso quando a requisição for para uma fila (Worker) ou Webhook e o resultado virá depois.</li>
+                                    <li><strong>415 Unsupported Media Type:</strong> O cliente tentou enviar um Content-Type que a API não aceita (ex: enviou XML, mas você só aceita `application/json`).</li>
+                                    <li><strong>422 Unprocessable Entity:</strong> O JSON está perfeito sintaticamente, mas falhou nas regras de negócio/validações de domínio (ex: Tentou transferir dinheiro, mas o saldo é menor que o valor).</li>
+                                </ul>
+                            </div>
+                        </details>
+                    </div>
+                </article>
+
+                <!-- ========================================== -->
+                <!-- 2. ARCHITECTURE PATTERNS & SOLID           -->
+                <!-- ========================================== -->
+                <article class="doc-card premium-card rounded-2xl p-8" data-category="arch">
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <span class="badge">#architecture</span> <span class="badge">#solid</span> <span class="badge">#patterns</span>
+                    </div>
+                    <h2 class="text-2xl font-semibold tracking-tight text-zinc-100 mb-4">Arquiteturas e Princípios S.O.L.I.D.</h2>
+
+                    <div class="space-y-4">
+                        <details>
+                            <summary>Hexagonal, Clean, Vertical Slice & SOA <i class="ph ph-caret-down text-zinc-500"></i></summary>
+                            <div class="details-content space-y-4">
+                                <p><strong>Hexagonal (Ports & Adapters):</strong> Domínio no centro. Comunicação com o mundo externo ocorre via Portas (Interfaces no Domínio) e Adapters (Implementações na Infra/API). Divide entre Primary/Driving (quem chama a API) e Secondary/Driven (o DB que a API chama).</p>
+                                <p><strong>Clean Architecture:</strong> Baseia-se na "Regra de Dependência" (setas apontam pra dentro). <em>Domain -> Application -> Infra</em>. Gera muito boilerplate (DTO mappings), mas excelente para domínios massivos.</p>
+                                <p><strong>Vertical Slice Architecture:</strong> Em vez de camadas horizontais (Pasta Repositories, Pasta Controllers), você fatias por <em>Feature</em>. Um arquivo contém Endpoint, Command, Handler e Query. Alto acoplamento local, mas baixo acoplamento global. (Usa muito MediatR).</p>
+                                <p><strong>SOA vs Microservices:</strong> SOA usa serviços "gordos" conectados por um ESB pesado, geralmente dividindo banco de dados. Microservices são focados em um único contexto (Bounded Context) e <em>cada um possui seu próprio banco de dados independente</em>.</p>
+                            </div>
+                        </details>
+                        <details>
+                            <summary>S.O.L.I.D. Direto ao Ponto <i class="ph ph-caret-down text-zinc-500"></i></summary>
+                            <div class="details-content grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div><strong class="text-amber-400">S (Responsabilidade Única):</strong> Uma classe deve ter apenas 1 motivo para mudar.</div>
+                                <div><strong class="text-amber-400">O (Aberto/Fechado):</strong> Fechado para alteração, aberto para extensão (Evite encher de `ifs`, use polimorfismo/interfaces).</div>
+                                <div><strong class="text-amber-400">L (Substituição de Liskov):</strong> A classe filha nunca pode quebrar o contrato ou lançar exception inesperada se substituir a classe pai.</div>
+                                <div><strong class="text-amber-400">I (Segregação de Interfaces):</strong> Não crie interfaces "Deus". Quebre em interfaces menores. Ninguém deve ser forçado a implementar o que não usa.</div>
+                                <div class="md:col-span-2"><strong class="text-amber-400">D (Inversão de Dependência):</strong> Módulos de alto nível não dependem de baixo nível. Ambos dependem de abstrações (Interfaces). A base da Injeção de Dependência no .NET.</div>
+                            </div>
+                        </details>
+                        <details>
+                            <summary>Engineering Principles (YAGNI, DRY, Coesão/Acoplamento) <i class="ph ph-caret-down text-zinc-500"></i></summary>
+                            <div class="details-content space-y-3">
+                                <p><strong>Baixa Coesão / Alto Acoplamento:</strong> O pior cenário. Alto acoplamento: Alterar Classe A quebra Classe B. Baixa Coesão: A classe faz muita coisa sem sentido (ex: `Helper.cs` envia email, calcula imposto e faz parser de string).</p>
+                                <p><strong>YAGNI (You Aren't Gonna Need It):</strong> Não adicione complexidade prevendo o futuro. Se precisa de um Gateway, faça pra um. Não crie uma Abstract Factory complexa "para caso entre o PayPal no ano que vem".</p>
+                                <p><strong>DRY (Don't Repeat Yourself):</strong> Evite duplicar lógica de negócio core. Mas atenção: é aceitável ter o mesmo código DTO em dois microserviços diferentes para evitar Acoplamento Temporal.</p>
+                            </div>
+                        </details>
+                    </div>
+                </article>
+
+                <!-- ========================================== -->
+                <!-- 3. DDD (DOMAIN DRIVEN DESIGN)              -->
+                <!-- ========================================== -->
+                <article class="doc-card premium-card rounded-2xl p-8" data-category="ddd">
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <span class="badge">#ddd</span> <span class="badge">#domain</span>
+                    </div>
+                    <h2 class="text-2xl font-semibold tracking-tight text-zinc-100 mb-4">Domain-Driven Design (DDD)</h2>
+
+                    <div class="space-y-4">
+                        <details>
+                            <summary>Domínio Anêmico vs Rico <i class="ph ph-caret-down text-zinc-500"></i></summary>
+                            <div class="details-content">
+                                <p><strong class="text-red-400">Anêmico:</strong> Entidades são apenas sacos de dados (getters e setters abertos). Toda regra, `ifs` e cálculos moram no `Service`. Fere o encapsulamento.</p>
+                                <p><strong class="text-emerald-400">Rico:</strong> A entidade protege seu estado. Setters são privados. A alteração de estado se dá via métodos que expressam comportamentos de negócio. Ao invés de <code class="text-zinc-400">fatura.Status = Pago</code>, usa-se <code class="text-emerald-400">fatura.Pagar()</code>.</p>
+                            </div>
+                        </details>
+                        <details>
+                            <summary>ACL (Anti-Corruption Layer) vs Adapter <i class="ph ph-caret-down text-zinc-500"></i></summary>
+                            <div class="details-content">
+                                <p><strong>Adapter:</strong> Converte interfaces técnicas (ex: envelopar o Serilog em um `ILogger` interno).</p>
+                                <p><strong>ACL:</strong> Camada entre seu sistema e um sistema Legado. Evita que o jargão e a bagunça estrutural do legado "corrompam" o seu Bounded Context moderno. Você traduz o lixo do legado para seu modelo limpo logo na entrada.</p>
+                            </div>
+                        </details>
+                        <details>
+                            <summary>Value Objects & Aggregate Roots <i class="ph ph-caret-down text-zinc-500"></i></summary>
+                            <div class="details-content">
+                                <p><strong>Aggregate Root:</strong> Grupo de entidades lideradas por uma Raiz. Acesso aos filhos só passa pela Raiz. Ex: Você não insere um `ItemPedido` no banco. Você chama `Pedido.AdicionarItem()`, pois o Pedido deve gerenciar a invariante (ex: total da compra).</p>
+                                <p><strong>Value Object:</strong> Representa um aspecto tipado, sem identidade (ID). São <strong>Imutáveis</strong>. Igualdade é por valor (1 minuto == 60 segundos). Constroem e validam a si mesmos no construtor. No C#, use <code class="text-zinc-300 bg-white/10 px-1 rounded">record</code>.</p>
+<pre><code class="language-csharp"><span class="keyword">public record</span> <span class="type">Dinheiro</span>
+{
+    <span class="keyword">public decimal</span> <span class="keyword">Valor</span> { <span class="keyword">get</span>; <span class="keyword">init</span>; }
+    <span class="keyword">public string</span> <span class="keyword">Moeda</span> { <span class="keyword">get</span>; <span class="keyword">init</span>; }
+    
+    <span class="comment">// Auto-validação: Nasce sempre válido</span>
+    <span class="keyword">public</span> <span class="function">Dinheiro</span>(<span class="keyword">decimal</span> <span class="keyword">valor</span>, <span class="keyword">string</span> <span class="keyword">moeda</span>) { ... }
+}</code></pre>
+                            </div>
+                        </details>
+                        <details>
+                            <summary>Linguagem Ubíqua, Bounded Contexts & Domain Events <i class="ph ph-caret-down text-zinc-500"></i></summary>
+                            <div class="details-content">
+                                <ul class="list-disc list-inside space-y-2">
+                                    <li><strong>Linguagem Ubíqua:</strong> Devs e Negócios falam a mesma língua. Se chamam de "Assinante", o código não deve ter classe "User".</li>
+                                    <li><strong>Bounded Context:</strong> O contexto delimita o significado da entidade. "Cliente" no contexto de Vendas (precisa de histórico) é diferente de "Cliente" no de Entregas (precisa só de endereço e GPS).</li>
+                                    <li><strong>Domain Events:</strong> Acontecimentos passados que importam pro negócio. <code class="text-zinc-400">PedidoCriadoEvent</code> é disparado para desacoplar a notificação (e-mail) da regra de criação.</li>
+                                </ul>
+                            </div>
+                        </details>
+                    </div>
+                </article>
+
+                <!-- ========================================== -->
+                <!-- 4. C# DEEP DIVE (Zero-alloc, Refit, etc)   -->
+                <!-- ========================================== -->
+                <article class="doc-card premium-card rounded-2xl p-8" data-category="csharp">
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <span class="badge">#csharp</span> <span class="badge">#dotnet</span> <span class="badge">#performance</span>
+                    </div>
+                    <h2 class="text-2xl font-semibold tracking-tight text-zinc-100 mb-4">C# & .NET Deep Dive</h2>
+
+                    <div class="space-y-4">
+                        <details>
+                            <summary>Span&lt;T&gt;, Memory&lt;T&gt; e StringBuilder (Zero-Allocation) <i class="ph ph-caret-down text-zinc-500"></i></summary>
+                            <div class="details-content">
+                                <p><strong>O Problema:</strong> Strings em C# são imutáveis. Concatenar com `+=` em loops ou usar `.Substring()` cria incontáveis cópias inúteis na memória Heap (acionando o GC e travando CPU).</p>
+                                <p><strong>StringBuilder:</strong> Usa um buffer pré-alocado. Modifica a string no lugar (In-place). Essencial dentro de loops.</p>
+                                <p><strong>ReadOnlySpan&lt;char&gt;:</strong> É um <em>Ref Struct</em> alocado na Stack. Ele atua como uma "janela" apontando para a string original. Ao extrair partes (`Slice`), não cria NENHUM objeto na Heap. É performance pura para parsers.</p>
+                            </div>
+                        </details>
+                        <details>
+                            <summary>Integrações HTTP: Refit vs HttpClient <i class="ph ph-caret-down text-zinc-500"></i></summary>
+                            <div class="details-content">
+                                <p><strong>Refit:</strong> Transforma APIs REST em Interfaces C# vivas. Remove todo o boilerplate de serialização e roteamento. É a abordagem primária moderna.</p>
+                                <p><strong>HttpClient + AuthHandler:</strong> Use a via nativa quando precisar interceptar o ciclo de vida (DelegatingHandler) para injetar JWTs dinamicamente, ou quando a API externa não é RESTful.</p>
+<pre><code class="language-csharp"><span class="comment">// Usando Refit limpo</span>
+<span class="keyword">public interface</span> <span class="type">IViaCepApi</span> {
+    [<span class="type">Get</span>(<span class="string">"/ws/{cep}/json"</span>)]
+    <span class="type">Task</span>&lt;<span class="type">CepResponse</span>&gt; <span class="function">ConsultarAsync</span>(<span class="keyword">string</span> <span class="keyword">cep</span>);
+}</code></pre>
+                            </div>
+                        </details>
+                    </div>
+                </article>
+
+                <!-- ========================================== -->
+                <!-- 5. BANCOS DE DADOS E PERSISTÊNCIA          -->
+                <!-- ========================================== -->
+                <article class="doc-card premium-card rounded-2xl p-8" data-category="data">
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <span class="badge">#sql</span> <span class="badge">#nosql</span> <span class="badge">#dapper</span>
+                    </div>
+                    <h2 class="text-2xl font-semibold tracking-tight text-zinc-100 mb-4">Bancos de Dados & Persistência</h2>
+
+                    <div class="space-y-4">
+                        <details>
+                            <summary>EF Core vs Dapper vs ADO.NET <i class="ph ph-caret-down text-zinc-500"></i></summary>
+                            <div class="details-content">
+                                <p><strong>EF Core:</strong> Abstração máxima. Controle de transações (Unit of Work). Ideal para <em>Escrita (Commands)</em> onde o Domínio dita as regras e updates são controlados por Trackers.</p>
+                                <p><strong>Dapper:</strong> Micro-ORM. Baixa alocação de memória, velocidade bruta mapeando T-SQL para Objetos. Ideal para <em>Leitura (Queries)</em>, relatórios pesados e arquiteturas CQRS.</p>
+                                <p><strong>ADO.NET:</strong> Drivers puros. Uso raríssimo. Apenas para Bulk Inserts massivos onde milissegundos importam.</p>
+                            </div>
+                        </details>
+                        <details>
+                            <summary>Transações, ACID e Locks <i class="ph ph-caret-down text-zinc-500"></i></summary>
+                            <div class="details-content">
+                                <p><strong>ACID:</strong> Atomicidade (tudo ou nada), Consistência (regras/FKs não violadas), Isolamento (transações separadas), Durabilidade (gravou no disco).</p>
+                                <p><strong>Lock Pessimista:</strong> `SELECT FOR UPDATE`. Trava a linha fisicamente. Risco altíssimo de <em>Deadlock</em>. Solução pra deadlock: ordem de acesso unificada e transações curtas.</p>
+                                <p><strong>Lock Otimista:</strong> Não trava o BD. Usa coluna `RowVersion`. Se duas threads tentam salvar ao mesmo tempo, a 2ª sofre `ConcurrencyException`. A aplicação tenta novamente. Padrão Web.</p>
+                            </div>
+                        </details>
+                        <details>
+                            <summary>Índices e NoSQL (Teorema CAP) <i class="ph ph-caret-down text-zinc-500"></i></summary>
+                            <div class="details-content">
+                                <ul class="list-disc list-inside space-y-2">
+                                    <li><strong>Table Scan vs Index Seek:</strong> Scan lê o BD inteiro pra achar um WHERE (Custo O(N) catastrófico). Seek usa a árvore B+ do índice para ir direto ao disco.</li>
+                                    <li><strong>Teorema CAP (NoSQL):</strong> Consistência (C), Disponibilidade (A), Partição (P). Na nuvem, P é lei. Você escolhe entre CP (Mongo) ou AP (Dynamo/Cassandra).</li>
+                                    <li><strong>Eventual Consistency:</strong> Ao gravar num NoSQL/Tópico Kafka, as réplicas de leitura demoram ms para atualizar. Leituras imediatas pós-escrita podem retornar dados velhos. Arquitetura deve prever isso.</li>
+                                </ul>
+                            </div>
+                        </details>
+                    </div>
+                </article>
+
+                <!-- ========================================== -->
+                <!-- 6. TESTING PYRAMID                         -->
+                <!-- ========================================== -->
+                <article class="doc-card premium-card rounded-2xl p-8" data-category="tests">
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <span class="badge">#tests</span> <span class="badge">#xunit</span> <span class="badge">#quality</span>
+                    </div>
+                    <h2 class="text-2xl font-semibold tracking-tight text-zinc-100 mb-4">Pirâmide de Testes no .NET</h2>
+
+                    <div class="tldr-box">
+                        Padrão de escrita: <b>AAA (Arrange, Act, Assert)</b>.<br>
+                        Nomenclatura: <code class="text-zinc-300">MetodoEmTeste_EstadoEsperado_ResultadoEsperado</code>.
+                    </div>
+
+                    <div class="space-y-4">
+                        <details>
+                            <summary>Unit, Integration & E2E <i class="ph ph-caret-down text-zinc-500"></i></summary>
+                            <div class="details-content space-y-2">
+                                <p><strong>Unitários:</strong> (70%). Testam Domínio/Serviços isolados. Mocam banco de dados. Milhares rodam em segundos na CI.</p>
+                                <p><strong>Integração:</strong> (20%). Abandonamos "InMemoryDb" que não testa triggers. Usamos a lib <strong>Testcontainers</strong> que sobe um Docker real de PostgreSQL na hora do teste, roda e mata o container ao final.</p>
+                                <p><strong>End-to-End (E2E):</strong> (10%). Playwright ou Cypress. Um robô clicando na tela real. Lentos e frágeis, use apenas nas jornadas críticas.</p>
+                            </div>
+                        </details>
+                        <details>
+                            <summary>Mocks vs Stubs vs Spies <i class="ph ph-caret-down text-zinc-500"></i></summary>
+                            <div class="details-content">
+                                <p><strong>Stub:</strong> Objeto "burro" que provê um retorno fixo para que o teste prossiga (ex: força a API fake a retornar HTTP 200).</p>
+                                <p><strong>Mock:</strong> Focado em <em>Comportamento</em>. O teste passa SE o Mock comprovar que o método foi chamado. (Ex: "Verifique se o `EmailService.Enviar()` foi chamado 1 vez com esse ID").</p>
+                            </div>
+                        </details>
+                    </div>
+                </article>
+
+                <!-- ========================================== -->
+                <!-- 7. CLOUD, K8S, DOCKER & GIT                -->
+                <!-- ========================================== -->
+                <article class="doc-card premium-card rounded-2xl p-8" data-category="cloud git">
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <span class="badge">#devops</span> <span class="badge">#aws</span> <span class="badge">#k8s</span>
+                    </div>
+                    <h2 class="text-2xl font-semibold tracking-tight text-zinc-100 mb-4">Cloud, Containers & Versioning</h2>
+
+                    <div class="space-y-4">
+                        <details>
+                            <summary>Kubernetes (K8s) & LocalStack <i class="ph ph-caret-down text-zinc-500"></i></summary>
+                            <div class="details-content space-y-2">
+                                <p><strong>K8s:</strong> Orquestrador Declarativo. <code class="text-emerald-400">Pod:</code> Unidade efêmera que roda seu container. <code class="text-emerald-400">Deployment:</code> Garante as réplicas. <code class="text-emerald-400">Service:</code> O Load Balancer interno que mapeia para os Pods.</p>
+                                <p><strong>LocalStack:</strong> Permite simular SQS, SNS e S3 offline usando Docker na máquina do dev, parando de poluir a conta AWS dev.</p>
+                            </div>
+                        </details>
+                        <details>
+                            <summary>AWS: VPC, Subnets, SG vs NACL <i class="ph ph-caret-down text-zinc-500"></i></summary>
+                            <div class="details-content">
+                                <p><strong>VPC:</strong> Rede privada virtual. Isola seus recursos.</p>
+                                <p><strong>NACL (Subnet):</strong> <em>Stateless</em>. Regra de entrada e saída explícitas. (Portaria do prédio).</p>
+                                <p><strong>Security Group (EC2/RDS):</strong> <em>Stateful</em>. Permitiu entrada na 80? A saída pela 80 volta automaticamente. (Porta do seu apartamento).</p>
+                            </div>
+                        </details>
+                        <details>
+                            <summary>Git Strategies & Conventional Commits <i class="ph ph-caret-down text-zinc-500"></i></summary>
+                            <div class="details-content">
+                                <p><strong>Git Flow:</strong> Obsoleto para SaaS. Burocrático (`develop`, `release`, etc).</p>
+                                <p><strong>GitHub Flow:</strong> Branch da `main` -> PR -> Merge -> Deploy. Ágil.</p>
+                                <p><strong>Trunk-Based:</strong> Sêniors commitam direto na `main` várias vezes ao dia. Necessário uso de <em>Feature Flags</em> para código incompleto.</p>
+                                <p><strong>Conv. Commits:</strong> Padroniza `feat:`, `fix:`, `chore:`. Automatiza o <em>Semantic Versioning</em> (Major.Minor.Patch).</p>
+                            </div>
+                        </details>
+                        <details>
+                            <summary>Docker Basics Cheat Sheet <i class="ph ph-caret-down text-zinc-500"></i></summary>
+                            <div class="details-content">
+                                <p><code class="text-zinc-300">docker build -t app .</code> -> Gera imagem.</p>
+                                <p><code class="text-zinc-300">docker run -p 8080:80 app</code> -> Sobe container expondo porta.</p>
+                                <p><code class="text-zinc-300">docker exec -it [ID] /bin/bash</code> -> Entra no container em execução.</p>
+                                <p class="mt-2 text-amber-400 text-xs">Dica Sênior: Use imagens base <b>Alpine</b> ou <b>Distroless</b> para derrubar o peso do container de 200MB para ~50MB e reduzir superfície de ataque.</p>
+                            </div>
+                        </details>
+                    </div>
+                </article>
+
+                <!-- ========================================== -->
+                <!-- 8. LINUX & CLI MASTERY                     -->
+                <!-- ========================================== -->
+                <article class="doc-card premium-card rounded-2xl p-8" data-category="linux cloud">
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <span class="badge">#linux</span> <span class="badge">#cli</span> <span class="badge">#troubleshooting</span>
+                    </div>
+                    <h2 class="text-2xl font-semibold tracking-tight text-zinc-100 mb-4">Linux & CLI Mastery</h2>
+
+                    <div class="tldr-box">
+                        <strong class="text-zinc-200">TL;DR:</strong> O terminal é a sua IDE em produção. Dominar ferramentas POSIX separa os juniores que entram em pânico dos seniores que resolvem outages via SSH.
+                    </div>
+
+                    <div class="space-y-4">
+                        <details>
+                            <summary>Processamento de Texto & Arquivos (A Trindade) <i class="ph ph-caret-down text-zinc-500"></i></summary>
+                            <div class="details-content space-y-3">
+                                <p><strong>grep:</strong> Busca textos. <code class="text-zinc-300 bg-white/10 px-1 rounded">grep -rnw '/var/log' -e 'Exception'</code> busca recursivamente (r), mostrando a linha (n) e palavra exata (w).</p>
+                                <p><strong>awk:</strong> Extrai colunas. <code class="text-zinc-300 bg-white/10 px-1 rounded">ps aux | awk '{print $2}'</code> pega apenas os PIDs (2ª coluna).</p>
+                                <p><strong>sed:</strong> Substituição de stream. <code class="text-zinc-300 bg-white/10 px-1 rounded">sed -i 's/antigo/novo/g' config.json</code> altera o arquivo in-place.</p>
+                                <p><strong>find + exec:</strong> Acha e executa. <code class="text-zinc-300 bg-white/10 px-1 rounded">find . -type f -name "*.log" -mtime +7 -exec rm {} \;</code> deleta logs com mais de 7 dias.</p>
+                            </div>
+                        </details>
+                        <details>
+                            <summary>Redes & Troubleshooting (Network) <i class="ph ph-caret-down text-zinc-500"></i></summary>
+                            <div class="details-content space-y-3">
+                                <p><strong>Portas abertas:</strong> <code class="text-zinc-300 bg-white/10 px-1 rounded">ss -tuln</code> ou <code class="text-zinc-300 bg-white/10 px-1 rounded">netstat -tulpn</code> para listar quem está escutando em qual porta.</p>
+                                <p><strong>Testar Conexão TCP:</strong> <code class="text-zinc-300 bg-white/10 px-1 rounded">nc -zv host.com 443</code> (Netcat) testa se a porta está aberta no firewall sem precisar de telnet.</p>
+                                <p><strong>Matar processo por Porta:</strong> <code class="text-zinc-300 bg-white/10 px-1 rounded">kill -9 $(lsof -t -i:8080)</code> mata brutalmente quem estiver travando a porta 8080.</p>
+                                <p><strong>DNS:</strong> <code class="text-zinc-300 bg-white/10 px-1 rounded">dig +short dominio.com</code> para debugar problemas de resolução de nome.</p>
+                            </div>
+                        </details>
+                        <details>
+                            <summary>Serviços, Logs e Sistema <i class="ph ph-caret-down text-zinc-500"></i></summary>
+                            <div class="details-content space-y-3">
+                                <p><strong>Systemd (Serviços):</strong> <code class="text-zinc-300 bg-white/10 px-1 rounded">systemctl status/start/stop/restart meu-app</code>.</p>
+                                <p><strong>Journalctl (Logs):</strong> Ver logs do serviço: <code class="text-zinc-300 bg-white/10 px-1 rounded">journalctl -u meu-app -f</code> (-f para "tail"/seguir ao vivo).</p>
+                                <p><strong>Análise de Disco/CPU:</strong> <code class="text-zinc-300 bg-white/10 px-1 rounded">df -h</code> (espaço em disco), <code class="text-zinc-300 bg-white/10 px-1 rounded">du -sh *</code> (tamanho das pastas). <code class="text-zinc-300 bg-white/10 px-1 rounded">htop</code> ou <code class="text-zinc-300 bg-white/10 px-1 rounded">top</code> para monitorar CPU e RAM dos processos.</p>
+                            </div>
+                        </details>
+                        <details>
+                            <summary>Permissões (O básico para não usar 777) <i class="ph ph-caret-down text-zinc-500"></i></summary>
+                            <div class="details-content space-y-3">
+                                <p><span class="text-red-400 font-medium">Anti-pattern:</span> Dar <code class="text-zinc-300 bg-white/10 px-1 rounded">chmod 777</code>. Isso dá permissão de Leitura(4) + Escrita(2) + Execução(1) para Dono, Grupo e Público.</p>
+                                <p><span class="text-green-400 font-medium">Boas práticas:</span> <code class="text-zinc-300 bg-white/10 px-1 rounded">chmod 644</code> para arquivos (dono lê/escreve, outros leem). <code class="text-zinc-300 bg-white/10 px-1 rounded">chmod 755</code> para diretórios/scripts (dono faz tudo, outros leem/executam).</p>
+                                <p><strong>Trocar Dono:</strong> <code class="text-zinc-300 bg-white/10 px-1 rounded">chown usuario:grupo arquivo.txt</code>.</p>
+                            </div>
+                        </details>
+                    </div>
+                </article>
+
+                <!-- ========================================== -->
+                <!-- 9. THE 36 Q&A VAULT (A OBRA-PRIMA)         -->
+                <!-- ========================================== -->
+                <div class="pt-8 mb-6 doc-card" data-category="qa">
+                    <h2 class="text-3xl font-bold tracking-tight text-gradient mb-2 text-center">The 36 Q&A Vault</h2>
+                    <p class="text-sm text-zinc-500 text-center">Todas as 36 perguntas de entrevistas Sênior/Staff respondidas de forma cirúrgica.</p>
+                </div>
+
+                <div class="space-y-6 doc-card" data-category="qa">
+                    
+                    <!-- BLOCO Q&A: C# INTERNALS -->
+                    <div class="bg-white/[0.02] border border-white/5 p-6 rounded-2xl">
+                        <h3 class="text-lg font-medium text-emerald-400 mb-4 uppercase tracking-widest text-xs">1. C# & .NET Core Internals</h3>
+                        
+                        <details><summary>Q1, 34, 35: Task vs Thread? ValueTask vs Task? <i class="ph ph-caret-down text-zinc-500"></i></summary>
+                            <div class="details-content">
+                                <p><strong>Thread:</strong> Criação pesada (~1MB). `Task` é uma promessa de operação assíncrona que executa na ThreadPool via StateMachine gerada pelo compilador no `async/await`, liberando a thread para outros.</p>
+                                <p><strong>Task vs ValueTask:</strong> `Task` aloca na Heap (gera trabalho pro GC). `ValueTask` é struct (na Stack). Use ValueTask se o método quase sempre retorna de forma síncrona/cacheada.</p>
+                            </div>
+                        </details>
+                        <details><summary>Q4, 5, 33b: Heap vs Stack? GC? JIT? <i class="ph ph-caret-down text-zinc-500"></i></summary>
+                            <div class="details-content">
+                                <p><strong>Tipos:</strong> Value Types (struct/int) vão pra Stack (Rápido, efêmero). Reference Types (class/string) vão pra Heap (precisa do GC para limpar).</p>
+                                <p><strong>GC (Garbage Collector):</strong> Limpa a Heap. Dividido em Gerações (0, 1, 2). Coletas na Gen2 causam "Stop the World".</p>
+                                <p><strong>JIT (Just In Time):</strong> Compila o código intermediário (IL) para binário de máquina no momento da execução.</p>
+                            </div>
+                        </details>
+                        <details><summary>Q3: Injeção de Dependência e Ciclos <i class="ph ph-caret-down text-zinc-500"></i></summary>
+                            <div class="details-content">
+                                <p><strong>Transient:</strong> Nova sempre. <strong>Scoped:</strong> Mesma instância no request (Ideal para EF Core `DbContext`). <strong>Singleton:</strong> Instância global (Cuidado com Memory Leaks e Thread-Safety).</p>
+                            </div>
+                        </details>
+                    </div>
+
+                    <!-- BLOCO Q&A: DATA E PERSISTÊNCIA -->
+                    <div class="bg-white/[0.02] border border-white/5 p-6 rounded-2xl">
+                        <h3 class="text-lg font-medium text-blue-400 mb-4 uppercase tracking-widest text-xs">2. Banco de Dados e Concorrência</h3>
+                        
+                        <details><summary>Q9, 26, 30: O que é ACID? Lock Otimista vs Pessimista? Transação? <i class="ph ph-caret-down text-zinc-500"></i></summary>
+                            <div class="details-content">
+                                <p><strong>ACID:</strong> Atomicidade, Consistência, Isolamento, Durabilidade. Garantem segurança em transações relacionais.</p>
+                                <p><strong>Otimista:</strong> Usa `RowVersion`. Não trava. Se houver concorrência simultânea, um lança erro e a aplicação tenta de novo. Padrão Web.</p>
+                                <p><strong>Pessimista:</strong> `SELECT FOR UPDATE`. Trava a linha no banco para outros leitores/escritores. Risco de Deadlock.</p>
+                            </div>
+                        </details>
+                        <details><summary>Q25, 27: Truncate vs Delete? Resolver Deadlock? <i class="ph ph-caret-down text-zinc-500"></i></summary>
+                            <div class="details-content">
+                                <p><strong>Truncate (DDL):</strong> Apaga tudo, instantâneo, não aceita Rollback (geralmente).</p>
+                                <p><strong>Delete (DML):</strong> Checa constraints, grava no Transaction Log (lento), aceita Rollback e Cláusula WHERE.</p>
+                                <p><strong>Deadlock:</strong> Duas transações esperam o lock cruzado. Solução: Acesse recursos sempre na mesma ordem, mantenha transações absurdamente curtas.</p>
+                            </div>
+                        </details>
+                        <details><summary>Q20, 28, 29, 33: Índices? SQL vs NoSQL? Pools? <i class="ph ph-caret-down text-zinc-500"></i></summary>
+                            <div class="details-content">
+                                <p><strong>Índices:</strong> Clusterizado (Ordena fisicamente os dados, só 1 por tabela - PK). Não-Clusterizado (Cria um sumário apontando para o disco).</p>
+                                <p><strong>SQL vs NoSQL:</strong> Pergunte: Os dados são fortemente relacionados? Necessitam garantias financeiras ACID rígidas? (SQL). Ou o volume é insano e o acesso é quase sempre por Chave? (NoSQL).</p>
+                                <p><strong>Connection Pool:</strong> Pool mantido pelo Driver ADO.NET reaproveitando handshakes TCP caros ao BD. Diferente de Thread Pool que gerencia CPU do servidor.</p>
+                            </div>
+                        </details>
+                    </div>
+
+                    <!-- BLOCO Q&A: ARQUITETURA, REDE E RESILIENCIA -->
+                    <div class="bg-white/[0.02] border border-white/5 p-6 rounded-2xl">
+                        <h3 class="text-lg font-medium text-pink-400 mb-4 uppercase tracking-widest text-xs">3. Arquitetura, Segurança e Resiliência</h3>
+                        
+                        <details><summary>Q6, 10, 24: Resiliência Externa e Filas (Idempotência) <i class="ph ph-caret-down text-zinc-500"></i></summary>
+                            <div class="details-content">
+                                <p><strong>Retry & Circuit Breaker:</strong> Use Polly. Falhou 3x? Abre o circuito e para de enviar requests.</p>
+                                <p><strong>Filas e Idempotência:</strong> Worker consumiu do SQS mas caiu antes de dar ACK? A mensagem volta. Para não processar a compra duas vezes, verifique a `IdempotencyKey` no Banco. Erros máximos vão para a <strong>DLQ (Dead Letter Queue)</strong>.</p>
+                            </div>
+                        </details>
+                        <details><summary>Q21, 22: Cancelamento e Saga Pattern <i class="ph ph-caret-down text-zinc-500"></i></summary>
+                            <div class="details-content">
+                                <p><strong>Cancelamento de 1M (CancellationToken):</strong> Propague o token da Controller pro HttpClient/EFCore. Usuário abortou o request? Dispara Exception e o banco dá Rollback instantâneo.</p>
+                                <p><strong>Reverter chamadas externas:</strong> Sistemas externos não participam do seu Rollback ACID. Use a <strong>Saga Pattern</strong> (Transações de Compensação): Se o passo C falhar, chame a API de estorno do Passo B.</p>
+                            </div>
+                        </details>
+                        <details><summary>Q7, 8, 18, 19: Proteger API e Observabilidade <i class="ph ph-caret-down text-zinc-500"></i></summary>
+                            <div class="details-content">
+                                <p><strong>AuthN vs AuthZ:</strong> Autenticação (Saber quem é, JWT). Autorização (Saber o que pode fazer, Roles/Claims).</p>
+                                <p><strong>Proteção (Rate Limit):</strong> WAF na frente. Configurar Rate Limiting por IP ou `UserId` na API para barrar DDOS. Métricas baseadas em OpenTelemetry e Logs com Serilog apontam quem é o agressor.</p>
+                            </div>
+                        </details>
+                        <details><summary>Q11, 12, 14: Cloud e Padrões (Patterns) <i class="ph ph-caret-down text-zinc-500"></i></summary>
+                            <div class="details-content">
+                                <p><strong>Terraform:</strong> Infraestrutura como Código. Declara via arquivo e StateFile.</p>
+                                <p><strong>Efêmeros:</strong> AWS Lambda, Containers Fargate. Nascem e morrem, exigem arquitetura Stateless.</p>
+                                <p><strong>Patterns Chaves:</strong> Strategy (Eliminar IFs), Decorator (Adicionar cache num repository sem tocá-lo), Outbox Pattern (Gravar BD e publicar Evento de forma atômica).</p>
+                            </div>
+                        </details>
+                    </div>
+
+                    <!-- BLOCO Q&A: SOFT SKILLS E CLEAN CODE -->
+                    <div class="bg-white/[0.02] border border-white/5 p-6 rounded-2xl">
+                        <h3 class="text-lg font-medium text-amber-400 mb-4 uppercase tracking-widest text-xs">4. Soft Skills & Clean Code (O Diferencial Sênior)</h3>
+                        
+                        <details><summary>Q13, 31, 32, 36: Testes e Código "Funcional" x Bom <i class="ph ph-caret-down text-zinc-500"></i></summary>
+                            <div class="details-content">
+                                <p><strong>Testes:</strong> Documentação viva. Protegem regressão.</p>
+                                <p><strong>Coesão e Acoplamento:</strong> O desejável é Alta Coesão (Classe focada) e Baixo Acoplamento (Desconectada de implementações via Interfaces).</p>
+                                <p><strong>Código Bom:</strong> Código que funciona ("funcional") não é bom. Código bom é legível, expressa o negócio (DDD), testável e tem manutenibilidade fácil.</p>
+                            </div>
+                        </details>
+                        <details><summary>Q15, 16, 17, 23: Tarefas chatas, Dívida Técnica e Squads <i class="ph ph-caret-down text-zinc-500"></i></summary>
+                            <div class="details-content">
+                                <p><strong>Tarefas chatas:</strong> Maturidade profissional. Entregar o valor necessário. Tentar automatizar o "chato" para o futuro.</p>
+                                <p><strong>Dívida Técnica:</strong> Nunca esconder. Visibilidade no Board Jira. Alocar tempo constante ou usar a Regra do Escoteiro para ir limpando as dívidas ao redor das entregas de features novas.</p>
+                            </div>
+                        </details>
+                    </div>
+
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function filterCategory(category) {
+            const buttons = document.querySelectorAll('.nav-btn');
+            buttons.forEach(btn => {
+                if (btn.dataset.cat === category || (category === 'all' && btn.dataset.cat === 'all')) {
+                    btn.classList.add('bg-white/10', 'text-zinc-100', 'border-white/10');
+                    btn.classList.remove('text-zinc-400', 'hover:bg-white/5');
+                } else {
+                    btn.classList.remove('bg-white/10', 'text-zinc-100', 'border-white/10');
+                    btn.classList.add('text-zinc-400', 'hover:bg-white/5');
+                }
+            });
+
+            const cards = document.querySelectorAll('.doc-card');
+            cards.forEach(card => {
+                if (category === 'all' || card.dataset.category.includes(category)) {
+                    card.style.display = 'block';
+                    card.style.animation = 'fadeIn 0.3s ease-in-out';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            
+            const searchBox = document.getElementById('searchInput');
+            if(searchBox.value !== '') searchBox.value = '';
+            document.getElementById('mainContent').scrollTop = 0;
+        }
+
+        const searchInput = document.getElementById('searchInput');
+        searchInput.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const cards = document.querySelectorAll('.doc-card');
+            
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-white/10', 'text-zinc-100', 'border-white/10');
+                btn.classList.add('text-zinc-400', 'hover:bg-white/5');
+            });
+
+            cards.forEach(card => {
+                const textContent = card.innerText.toLowerCase();
+                const tags = card.dataset.category.toLowerCase();
+                
+                if (textContent.includes(searchTerm) || tags.includes(searchTerm)) {
+                    card.style.display = 'block';
+                    if(searchTerm.length > 2) {
+                        card.querySelectorAll('details').forEach(detail => {
+                            if(detail.innerText.toLowerCase().includes(searchTerm)) {
+                                detail.setAttribute('open', '');
+                            }
+                        });
+                    }
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                const input = document.getElementById('searchInput');
+                input.focus();
+                input.parentElement.classList.add('ring-2', 'ring-white/20');
+                setTimeout(() => input.parentElement.classList.remove('ring-2', 'ring-white/20'), 200);
+            }
+        });
+
+        function copyCode(buttonElement) {
+            try {
+                const preElement = buttonElement.closest('.details-content').querySelector('pre') || buttonElement.closest('article').querySelector('pre');
+                const codeBlock = preElement.innerText;
+                
+                navigator.clipboard.writeText(codeBlock).then(() => {
+                    const originalHTML = buttonElement.innerHTML;
+                    buttonElement.innerHTML = '<i class="ph ph-check text-emerald-400"></i>';
+                    setTimeout(() => { buttonElement.innerHTML = originalHTML; }, 2000);
+                }).catch(err => {
+                    const textArea = document.createElement("textarea");
+                    textArea.value = codeBlock;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand("copy");
+                    document.body.removeChild(textArea);
+                    const originalHTML = buttonElement.innerHTML;
+                    buttonElement.innerHTML = '<i class="ph ph-check text-emerald-400"></i>';
+                    setTimeout(() => { buttonElement.innerHTML = originalHTML; }, 2000);
+                });
+            } catch (err) { console.error('Copy failed: ', err); }
+        }
+
+        const style = document.createElement('style');
+        style.innerHTML = `@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }`;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
+
